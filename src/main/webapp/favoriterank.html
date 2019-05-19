@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>收藏排行榜</title>
+        <link rel="stylesheet" type="text/css" href="css/common.css">
+        <link rel="stylesheet" type="text/css" href="css/ranking-list.css">
+        <script src="js/jquery-3.3.1.js"></script>
+        <script src="js/getParameter.js"></script>
+    </head>
+    <body>
+    <!--引入头部-->
+    <div id="header"></div>
+        <div class="contant">
+            <div class="shaixuan">
+                <span>线路名称</span>
+                <input type="text" id="rname">
+                <span>金额</span>
+                <input type="text" id="p_start">~<input type="text" id="p_end">
+                <button id="search_btn" >搜索</button>
+            </div>
+            <div class="list clearfix">
+                <ul id="routeData">
+
+                    <li>
+                        <span class="num">8</span>
+                        <a href="route_detail.html"><img src="images/jiangxuan_4.jpg" alt=""></a>
+                        <h4><a href="route_detail.html">【尾单特卖】全国-曼谷6-7天自由行 泰国出境旅游 特价往6-7天自由行 泰国出境旅游 特价往..</a></h4>
+                        <p>
+                            <b class="price">&yen;<span>899</span>起</b>
+                            <span class="shouchang">已收藏450次</span>
+                        </p>
+                    </li>
+                </ul>
+            </div>
+            <div class="pageNum">
+                <ul id="pageNum">
+                    <li><a href="">首页</a></li>
+                    <li class="threeword"><a href="#">上一页</a></li>
+                    <li><a href="#">1</a></li>
+
+                    <li class="threeword"><a href="javascript:;">下一页</a></li>
+                    <li class="threeword"><a href="javascript:;">末页</a></li>
+                </ul>
+            </div>
+        </div>
+    	
+         <!--导入底部-->
+   		 <div id="footer"></div>
+    <!--导入布局js，共享header和footer-->
+    <script type="text/javascript" src="js/include.js"></script>
+
+
+    <script>
+        $(function () {
+            rank();
+        });
+        $("#search_btn").click(function () {
+            var rname = $("#rname").val();
+            var p_start = $("#p_start").val();
+            var p_end = $("#p_end").val();
+            if ("" == rname || rname.length == 0) {
+                rname = null;
+            }
+            if ("" == p_start || p_start.length == 0) {
+                p_start = null;
+            }
+            if ("" == p_end || p_end.length == 0) {
+                p_end = null;
+            }
+            rank2(null,rname,p_start,p_end);
+        });
+        function rank(currentPage, rname, p_start, p_end) {
+            //发送异步请求
+            $.get("route/favoriteRank",{currentPage:currentPage,rname:rname,p_start:p_start,p_end:p_end},function (pageBean) {
+                //分页页码展示
+                debugger
+                var lis = "";
+                //rname为字符串，必须将双引号也转义加上
+                //拼接字符串时要现将静态的数据写上，再进行拼接  如 "北京" ---> ""+rname+"" --->\""+rname+"\"
+                //因为是异步请求，模糊查询的条件不必考虑回显
+                var startli = '<li onclick="javascript:rank(1)"><a href="javascript:void 0">首页</a></li>';
+                //处理上一页
+                var beforeNum = pageBean.currentPage -1;
+                if (beforeNum < 0){
+                    beforeNum = 1;
+                }
+                var beforeli = '<li class="threeword" onclick="javascript:rank('+beforeNum+')"><a href="javascript:void 0">上一页</a></li>';
+                lis += startli;
+                lis += beforeli;
+                //遍历页码,展示页码
+                //1.2 展示分页页码
+                /*
+                    1.一共展示10个页码，能够达到前5后4的效果
+                    2.如果前边不够5个，后边补齐10个
+                    3.如果后边不足4个，前边补齐10个
+                */
+                //定义开始位置和结束位置
+                debugger
+                var begin;
+                var end;
+                if (pageBean.totalPage <= 10){
+                    //如果总页码不足十个
+                    begin = 1;
+                    end = pageBean.totalPage;
+                }else {  //>=10
+                    //如果总页码超过10页 前五后4
+                    begin = pageBean.currentPage - 5 ;
+                    end = pageBean.currentPage + 4;
+                    //如果前边不够5个，后面补齐10个  比如点击了4，就可以从1开始正常显示
+                    if (begin < 1) {
+                        //当当前页码 - 5小于1时
+                        begin = 1;
+                        end = begin + 9;
+                    }
+                    //如果后边不足4个，前边补齐10个 比如页码只有12页，点击了9，后面就不够4页了
+                    if (end > pageBean.totalPage){
+                        //当当前页码 + 4大于总页码时
+                        end = pageBean.totalPage;
+                        begin = end - 9;
+                    }
+                }
+
+                for (var i = begin; i <=end; i++) {
+                    var li = null;
+                    if (pageBean.currentPage == i ){
+                        li = '<li class="curPage" onclick="javascript:rank('+i+')"><a href="javascript:void 0">'+i+'</a></li>';
+                    }else {
+                        li = '<li onclick="javascript:rank('+i+')"><a href="javascript:void 0">'+i+'</a></li>';
+                    }
+                    lis += li;
+                }
+                var nextNum  = pageBean.currentPage + 1;
+                var lastNum = pageBean.totalPage;
+                if (nextNum > lastNum){
+                    nextNum = lastNum;
+                }
+                var afterli = '<li class="threeword" onclick="javascript:rank('+nextNum+')"><a href="javascript:void 0">下一页</a></li>';
+                var lastli = '<li class="threeword" onclick="javascript:rank('+lastNum+')"><a href="javascript:void 0 ">末页</a></li>';
+                lis += afterli;
+                lis += lastli;
+
+                $("#pageNum").html(lis);
+
+                //收藏排行榜具体数据展示
+                var route_lis = "";
+                for (var i = 0; i < pageBean.list.length; i++) {
+                    //获取集合中的route对象
+                    var route = pageBean.list[i];
+                    var li;
+                    if (i >= 2) {
+                        li = '<li>\n' +
+        '                        <span class="num">'+(i+1)+'</span>\n' +
+        '                           <a href="route_detail.html?rid='+route.rid+'"><img src="'+route.rimage+'" alt=""></a>\n' +
+        '                           <h4><a href="route_detail.html?rid='+route.rid+'">'+route.rname+'</a></h4>\n' +
+        '                        <p>\n' +
+        '                            <b class="price">&yen;<span>'+route.price+'</span>起</b>\n' +
+        '                            <span class="shouchang">已收藏'+route.count+'次</span>\n' +
+        '                        </p>\n' +
+        '                    </li>';
+                    }else {
+                        li = '<li>\n' +
+        '                        <span class="num two">'+(i+1)+'</span>\n' +
+        '                           <a href="route_detail.html?rid='+route.rid+'"><img src="'+route.rimage+'" alt=""></a>\n' +
+        '                           <h4><a href="route_detail.html?rid='+route.rid+'">'+route.rname+'</a></h4>\n' +
+        '                        <p>\n' +
+        '                            <b class="price">&yen;<span>'+route.price+'</span>起</b>\n' +
+        '                            <span class="shouchang">已收藏'+route.count+'次</span>\n' +
+        '                        </p>\n' +
+        '                    </li>';
+                    }
+                    route_lis += li;
+                }
+
+                $("#routeData").html(route_lis);
+                //定位到页面顶部 windows对象中的方法 scrollTo
+                scrollTo(0,0);
+            })
+        }
+
+        function rank2(currentPage, rname, p_start, p_end) {
+            //发送异步请求
+            $.get("route/favoriteRank",{currentPage:currentPage,rname:rname,p_start:p_start,p_end:p_end},function (pageBean) {
+                //分页页码展示
+                var lis = "";
+                //rname为字符串，必须将双引号也转义加上
+                //拼接字符串时要现将静态的数据写上，再进行拼接  如 "北京" ---> ""+rname+"" --->\""+rname+"\"
+                //因为是异步请求，模糊查询的条件不必考虑回显
+                var startli = '<li onclick="javascript:rank2(1,\''+rname+'\','+p_start+','+p_end+')"><a href="javascript:void 0">首页</a></li>';
+                //处理上一页
+                var beforeNum = pageBean.currentPage -1;
+                if (beforeNum < 0){
+                    beforeNum = 1;
+                }
+                var beforeli = '<li class="threeword" onclick="javascript:rank2('+beforeNum+',\''+rname+'\','+p_start+','+p_end+')"><a href="javascript:void 0">上一页</a></li>';
+                lis += startli;
+                lis += beforeli;
+                //遍历页码,展示页码
+                //1.2 展示分页页码
+                /*
+                    1.一共展示10个页码，能够达到前5后4的效果
+                    2.如果前边不够5个，后边补齐10个
+                    3.如果后边不足4个，前边补齐10个
+                */
+                //定义开始位置和结束位置
+                var begin;
+                var end;
+                if (pageBean.totalPage <= 10){
+                    //如果总页码不足十个
+                    begin = 1;
+                    end = pageBean.totalPage;
+                }else {
+                    //如果总页码超过10页 前五后4
+                    begin = pageBean.currentPage - 5 ;
+                    end = pageBean.currentPage + 4;
+                    //如果前边不够5个，后面补齐10个  比如点击了4，就可以从1开始正常显示
+                    if (begin < 1) {
+                        //当当前页码 - 5小于1时
+                        begin = 1;
+                        end = begin + 9;
+                    }
+                    //如果后边不足4个，前边补齐10个 比如页码只有12页，点击了9，后面就不够4页了
+                    if (end > pageBean.totalPage){
+                        //当当前页码 + 4大于总页码时
+                        end = pageBean.totalPage;
+                        begin = end - 9;
+                    }
+                }
+
+                for (var i = begin; i <=end; i++) {
+                    var li = null;
+                    if (pageBean.currentPage == i ){
+                        li = '<li class="curPage" onclick="javascript:rank2('+i+',\''+rname+'\','+p_start+','+p_end+')"><a href="javascript:void 0">'+i+'</a></li>';
+                    }else {
+                        li = '<li onclick="javascript:rank2('+i+',\''+rname+'\','+p_start+','+p_end+')"><a href="javascript:void 0">'+i+'</a></li>';
+                    }
+                    lis += li;
+                }
+                var nextNum  = pageBean.currentPage + 1;
+                var lastNum = pageBean.totalPage;
+                if (nextNum > lastNum){
+                    nextNum = lastNum;
+                }
+                var afterli = '<li class="threeword" onclick="javascript:rank2('+nextNum+',\''+rname+'\','+p_start+','+p_end+')"><a href="javascript:void 0">下一页</a></li>';
+                var lastli = '<li class="threeword" onclick="javascript:rank2('+lastNum+',\''+rname+'\','+p_start+','+p_end+')"><a href="javascript:void 0 ">末页</a></li>';
+                lis += afterli;
+                lis += lastli;
+
+                $("#pageNum").html(lis);
+
+                //收藏排行榜具体数据展示
+                var route_lis = "";
+                for (var i = 0; i < pageBean.list.length; i++) {
+                    //获取集合中的route对象
+                    var route = pageBean.list[i];
+                    var li;
+                    if (i >= 2) {
+                        li = '<li>\n' +
+                            '                        <span class="num">'+(i+1)+'</span>\n' +
+                            '                           <a href="route_detail.html?rid='+route.rid+'"><img src="'+route.rimage+'" alt=""></a>\n' +
+                            '                           <h4><a href="route_detail.html?rid='+route.rid+'">'+route.rname+'</a></h4>\n' +
+                            '                        <p>\n' +
+                            '                            <b class="price">&yen;<span>'+route.price+'</span>起</b>\n' +
+                            '                            <span class="shouchang">已收藏'+route.count+'次</span>\n' +
+                            '                        </p>\n' +
+                            '                    </li>';
+                    }else {
+                        li = '<li>\n' +
+                            '                        <span class="num two">'+(i+1)+'</span>\n' +
+                            '                           <a href="route_detail.html?rid='+route.rid+'"><img src="'+route.rimage+'" alt=""></a>\n' +
+                            '                           <h4><a href="route_detail.html?rid='+route.rid+'">'+route.rname+'</a></h4>\n' +
+                            '                        <p>\n' +
+                            '                            <b class="price">&yen;<span>'+route.price+'</span>起</b>\n' +
+                            '                            <span class="shouchang">已收藏'+route.count+'次</span>\n' +
+                            '                        </p>\n' +
+                            '                    </li>';
+                    }
+                    route_lis += li;
+                }
+
+                $("#routeData").html(route_lis);
+                //定位到页面顶部 windows对象中的方法 scrollTo
+                scrollTo(0,0);
+            })
+        }
+
+    </script>
+    </body>
+</html>
