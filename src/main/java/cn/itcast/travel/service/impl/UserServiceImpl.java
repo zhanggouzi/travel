@@ -36,7 +36,7 @@ public class UserServiceImpl implements UserService {
         //4.发送激活邮件
         //4.1 设置邮件内容,指定一个超链接到激活用户servlet
         // 并将激活码也携带到servlet,以便查询数据库判断是否点击了超链接
-        String content = "<a href= 'http://localhost:80/travel/user/active?code=" + user.getCode()+"'>点击激活【黑马旅游网】</a>";
+        String content = "<a href= 'http://localhost:8080/travel/user/activeUser?code=" + user.getCode()+"'>点击激活【黑马旅游网】</a>";
         MailUtils.sendMail(user.getEmail(),content,"激活邮件");
         return true;
     }

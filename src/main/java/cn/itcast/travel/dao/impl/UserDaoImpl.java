@@ -52,6 +52,7 @@ public class UserDaoImpl implements UserDao {
         User user = null;
         try{
             String sql = "select * from tab_user where code = ?";
+            System.out.println(sql);
             user = template.queryForObject(sql, new BeanPropertyRowMapper<User>(User.class), code);
         }catch (Exception e){
 
